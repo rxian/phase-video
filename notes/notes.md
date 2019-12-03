@@ -4,4 +4,4 @@ Algorithm Overview ([1], Fig. 2)
 - Multiply the resulting "images" by $\alpha$, and add it back to the phase component of the respective frames in the pyramid (positive coefficient gives motion amplification, and negative gives attenuation; some temporal interpolation could be done between time frames?).
 - Collapse the pyramid.
 
-[1]: phase-video.pdf
+[1]: ./phase-video.pdf
