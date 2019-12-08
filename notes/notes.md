@@ -38,7 +38,9 @@ H(r) = \begin{cases}
 $$
 
 $$
-G_k(\theta) = \frac{(K-1)!}{\sqrt{K(2(K-1))!}}\left(2\cos\left(\theta-\frac{\pi k}K\right)\right)^{K-1}.
+G_k(\theta) = \begin{cases} \frac{(K-1)!}{\sqrt{K(2(K-1))!}}\left(2\cos\left(\theta-\frac{\pi k}K\right)\right)^{K-1} &  \text{if } \left|\theta-\frac{\pi k}K\right| < \frac\pi2\\
+0 & \text{else.}
+\end{cases}
 $$
 
 We also use two windowing functions (in order), the first derived from above, and the second as proposed in ([Wadhwa et al. 2013][1], App A) that gives better results when the number of filters $N$ per octave exceeds 2.  For $n \in \{1,\cdots,N\}$,
@@ -92,7 +94,9 @@ Given the pyramid $P$ of an image, reconstruct its DFT image $\tilde I$ as follo
 > 
 > For $d,n,k=1$ to $D,N,K$ respectively:
 > - Set $J$ to be the result of upsampling $P[d,n,k]$ by 2 for $d-1$ times.
-> - $\tilde I\gets \tilde I + J \circ \bar B_{n,k}$.
+> - $J \gets J \circ \bar B_{n,k}$.
+> - Set $\bar J$ to be the complex conjugate of the reflection of $J$ about the $x$ and $y$-axis.
+> - $\tilde I\gets \tilde I + J + \bar J$.
 > 
 > Add to $\tilde I$ the result of upsampling $(R_L\circ \bar L)$ by 2 for $d$ times.
 > 
