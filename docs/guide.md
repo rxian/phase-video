@@ -3,19 +3,41 @@
 **Algorithm Overview** ([Wadhwa et al. 2013][1], Fig. 2)
 - Compute the complex steerable pyramid for each frame of the video (processed on $(x,y)$-planes, where the video sequence lies on $(x,y,t)$-hyperplane; now the changes in the phase component over time corresponds to motion).  [[details](#complex-steerable-pyramid)]
 - Perform band-pass temporal filtering on the phase component of each image in the pyramid to isolate motion at specific frequencies (processed on $t$-axis, and now the amplitude of the resulting "image" corresponds to the amount of motion).  [[details](#temporal-filtering)]
-- Smooth the "images" (optional).
-- Multiply the resulting "images" by $\alpha$, and add it back to the phase component of the respective frames in the pyramid (positive coefficient gives motion amplification, and negative gives attenuation).
-- Reconstruct video by collapsing the pyramid.
+- Smooth the "images" (optional, TODO).
+- Multiply the resulting "images" by $\alpha$, and add it back to the phase component of the respective frames in the pyramid (positive coefficient gives motion amplification, and negative gives attenuation).  [[details](#motion-modification)]
+- Reconstruct video by collapsing the pyramid.  [[details](#synthesis)]
 
 > **Algorithm (Motion Modification).**
-> 
-> Todo.
+>  
+> Input:
+> - $I_{1:T}$ is a real-valued video sequence.
+> - $D,K,N$ represents the depth, number of orientations and number of filters per octave to be used to construct the complex steerable pyramid.
+> - $f_s$ represents the sampling rate of the video sequence, and $f_l,f_h$ represents the frequency range of the motion to be modified.
+> - $\alpha$ is the magnification factor.
+> - $B,F$ represent the types of filters to be used to construct the pyramid and for temporal filtering, respectively.
+>  
+> Initialize:
+> - $P_{1:T}$, ${R_H}_{1:T}$, ${R_L}_{1:T}$ represent the pyramid sequence.
+> - $J_{1:T}$ is the output video sequence.
+> - Filter $F$ with $f_s,f_h,f_l$ as described in [temporal filtering section](#temporal-filtering).
+> ---
+> Obtain the complex steerable pyramid representation of each frame, i.e. $(P_t,{R_H}_t,{R_L}_t) \gets \text{PyramidAnalysis}(I_t,D,K,N,B)$ for all $t=1,\cdots T$, as described in [analysis algorithm](#analysis).
+>  
+> For $d,n,k=1$ to $D,N,K$ respectively:
+> - Set $X_{1:T} := (P_1[d,n,k],P_2[d,n,k],\cdots,P_T[d,n,k])$, the evolution of $I$ in pyramid representation at scale $(D,N)$ and direction $K$.
+> - Set $\Phi_{1:T}$ to be the phase component of $X_{1:T}$ ([`numpy.angle`](https://docs.scipy.org/doc/numpy/reference/generated/numpy.angle.html)).
+> - Set $\Delta\Phi_{1:T} \gets \text{TemporalFiltering}(\Phi_{1:T},F)$, performing temporal filtering on the phase, as described in [temporal filtering algorithm](#temporal-filtering).
+> - For each $t$, perform motion modification as described in [motion modification section](#motion-modification) with $(X_t,\Delta\Phi_t,\alpha)$, and update $X_t$ to be the result.
+>  
+> Obtain the motion magnified video sequence $J_{1:T}$, where $J_t\gets \text{PyramidSynthesis}(P_t,{R_H}_t,{R_L}_t,D,K,N,B)$ for all $t$, as described in [synthesis algorithm](#synthesis).
+>  
+> Return $J_{1:T}$.
 
 ## Complex Steerable Pyramid
 
 ### Filters 
 
-The result $Y$ of performing filtering $F$ to a DFT image $X$ in the frequency domain is an element-wise product, $Y = F\circ X$.  If $F$ is defined in terms of polar frequency coordinates (i.e. its Fourier coefficients are a function of $(r,\theta)$) and $X$ is origin-centered with width $W$ (i.e. DC component is at $(0,0)$), then the result is (cf. [atan2][3] definition)
+The result $Y$ of performing filtering $F$ to a DFT image $X$ in the frequency domain is an entry-wise product, $Y = F\circ X$.  If $F$ is defined in terms of polar frequency coordinates (i.e. its Fourier coefficients are a function of $(r,\theta)$) and $X$ is origin-centered with width $W$ (i.e. DC component is at $(0,0)$), then the result is (cf. [atan2][3] definition)
 
 $$ Y_{i,j} = X_{i,j} \cdot F\left(\frac{\sqrt{i^2+j^2}}{W} \pi, \text{atan2}(j,i) \right). $$
 
@@ -55,58 +77,96 @@ Finally, $B_{n,k}(r,\theta) = W_n(r)G_k(\theta)$ defines the filters used in the
 
 ### Analysis
 
-Given an image $I$, compute its DFT $\tilde I$, and then the pyramid as obtained follows with $\tilde I$ as input.
+Given an image $I$, obtain the complex steerable pyramid as follows.
 
 > **Algorithm (Pyramid Analysis).**
 > 
 > Input:
-> - $\tilde I$ is a complex-valued DFT image of width $W$ centered at the origin.
+> - $I$ is a real-valued square image of width $\ell$ centered at the origin.
 > - $D$ is the depth of the pyramid.
 > - $K$ is the number of filter orientations.
 > - $N$ is the number of filters per octave.
+> - $B$ is the filter to use.
 > 
 > Initialize:
 > - $P$ is a $D\times N\times K$ list representing the pyramid.
 > ---
-> Compute $R_H \gets \tilde I\circ H(\bullet/2)$, which is the high-pass residual.
+> Compute $\tilde I \gets \text{DFT}(I)$.
+>
+> Compute $R_H \gets \text{IDFT}(\tilde I\circ H(\bullet/2))$, which is the high-pass residual.
 > 
-> Let $J_0 := \tilde I$.
+> Let $\tilde J_0 := \tilde I$.
 > 
 > For $d=1,\cdots,D$:
-> - For $n=1,\cdots,N$ and $k=1,\cdots,K$, store $P[d,n,k] \gets J_{d-1} \circ B_{n,k}$.
-> - Set $J_d \gets J_{d-1} \circ L$, and then downsample by 2 (i.e. crop the DFT image and only keeping the middle part).
+> - For $n=1,\cdots,N$ and $k=1,\cdots,K$, store $P[d,n,k] \gets \text{IDFT}(\tilde J_{d-1} \circ B_{n,k}$).
+> - Set $J_d \gets \text{IDFT}(\tilde J_{d-1} \circ L)$, and downsample by 2.
+> - Set $\tilde J_d \gets J_{d}$.
 > 
-> Set $R_L:= J_D$, which is the low-pass residual.
+> Set $R_L:= \text{IDFT}(\tilde J_D)$, which is the low-pass residual.
 > 
 > Return $P, R_H, R_L$.
 
 ### Synthesis
 
-Given the pyramid $P$ of an image, reconstruct its DFT image $\tilde I$ as follows.  Note that by definition of the filters the complex conjugates are identity $\bar B_{n,k}=B_{n,k}$, $\bar H = H$, and $\bar L = L$.
+Given the complex steerabl pyramid representation $P$ of an image, reconstruct the original image $I$ as follows.  Note that by definition of the filters we use, their complex conjugates are identity, i.e. $\bar B_{n,k}=B_{n,k}$, $\bar H = H$, and $\bar L = L$.
 
 > **Algorithm (Pyramid Synthesis).**
 > 
 > Inputs:
 > - $P$ is a $D\times N\times K$ list representing the pyramid.
 > - $R_H$, $R_L$ are the high and low-pass residuals.
+> - $D$ is the depth of the pyramid.
+> - $K$ is the number of filter orientations.
+> - $N$ is the number of filters per octave.
+> - $B$ is the filter to use.
 > ---
-> Let $\tilde I := R_H \circ \bar H(\bullet/2)$.
+> Let $\tilde I := \text{DFT}(R_H) \circ \bar H(\bullet/2)$.
 > 
 > For $d,n,k=1$ to $D,N,K$ respectively:
-> - Set $J$ to be the result of upsampling $P[d,n,k]$ by 2 for $d-1$ times.
-> - $J \gets J \circ \bar B_{n,k}$.
-> - Set $\bar J$ to be the complex conjugate of the reflection of $J$ about the $x$ and $y$-axis.
-> - $\tilde I\gets \tilde I + J + \bar J$.
+> - Upsample $P[d,n,k]$ by 2 for $d-1$ times, and set $\tilde J\gets \text{DFT}(P[d,n,k])$.
+> - $\tilde J \gets \tilde J \circ \bar B_{n,k}$.
+> - $\tilde I\gets \tilde I + \tilde J$.
+> - Set $\tilde J$ to its complex conjugate, and reflect it about the $x$- and $y$-axis.
+> - $\tilde I\gets \tilde I + \tilde J$.
 > 
-> Add to $\tilde I$ the result of upsampling $(R_L\circ \bar L)$ by 2 for $d$ times.
+> Upsample $R_L$ by 2 for $d$ times, and set $\tilde I\gets \tilde I + \text{DFT}(R_L)$.
 > 
-> Return $\tilde I$.
+> Return $\text{IDFT}(\tilde I)$.
 
 ## Temporal Filtering
 
-Todo.
+Let the temporal filter $F$ be one of:
+- FIR Window ([`scipy.signal.firwin`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.firwin.html)),
+- Butterworth ([`scipy.signal.butter`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html?highlight=butterworth)).
 
-## Motion Magnification
+If the video is sampled at $f_s$, i.e. $f_s$ frames per second, then TODO.
+
+Let $I_{1:T}$ be a sequence of complex-valued images, then we compute the result after temporal filtering as follows.
+
+> **Algorithm (Temporal Filtering).**
+>  
+> Inputs:
+> - $I_{1:T}$ a sequence of complex-valued images.
+> - $F$ is the temporal filter (1D) to use.
+>  
+> Initialize:
+> - $J_{1:T}$ is the filtered image sequence of the same dimensions as $I_{1:T}$.
+> ---
+> For all pixel locations $i$:
+> - Set $x:= (I_{1,i},I_{2,i},\cdots,I_{T,i})$, the evolution of the pixel at $i$.
+> - Compute $\tilde x\gets \text{DFT}(x)$.
+> - Compute $\tilde y\gets \tilde x \circ F$.
+> - Set $J_{1:T,i} = \text{IDFT}(\tilde y)$.
+
+## Motion Modification
+
+Given a filtered frame $I$ in the pyramid (obtained with the [analysis algorithm](#analysis)), and an phase image $\Delta\Phi$ representing the motion present in this frame, we magnify the motion in the filtered frame by computing
+
+$$
+J = I \circ \exp(i(\alpha-1)\Delta\Phi),
+$$
+
+where $\exp$ is applied entry-wise, and $\alpha$ is the magnification factor: $\alpha=1$ is no modification, $\alpha>1$ is motion magnification, $\alpha<1$ is motion attenuation.
 
 [1]: http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf
 [2]: https://www.cns.nyu.edu/pub/eero/portilla03-preprint-corrected.pdf
