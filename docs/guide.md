@@ -3,7 +3,7 @@
 **Algorithm Overview** ([Wadhwa et al. 2013][1], Fig. 2)
 - Compute the complex steerable pyramid for each frame of the video (processed on $(x,y)$-planes, where the video sequence lies on $(x,y,t)$-hyperplane; now the changes in the phase component over time corresponds to motion).  [[details](#complex-steerable-pyramid)]
 - Perform band-pass temporal filtering on the phase component of each image in the pyramid to isolate motion at specific frequencies (processed on $t$-axis, and now the amplitude of the resulting "image" corresponds to the amount of motion).  [[details](#temporal-filtering)]
-- Smooth the "images" (optional, TODO).
+- Smooth the "images" (optional, not described here).
 - Multiply the resulting "images" by $\alpha$, and add it back to the phase component of the respective frames in the pyramid (positive coefficient gives motion amplification, and negative gives attenuation).  [[details](#motion-modification)]
 - Reconstruct video by collapsing the pyramid.  [[details](#synthesis)]
 
@@ -41,7 +41,7 @@ The result $Y$ of performing filtering $F$ to a DFT image $X$ in the frequency d
 
 $$ Y_{i,j} = X_{i,j} \cdot F\left(\frac{\sqrt{i^2+j^2}}{W} \pi, \text{atan2}(j,i) \right). $$
 
-The following filters (defined using polar frequency coordinates) are used to construct and collapse the pyramid ([Portilla et al. 2003][2], App. I).  $L,H$ are low and high-pass filters, and $G_k$ ($k\in\{1,\cdots,K\}$) is used to choose the orientation (out of $K$ directions).  
+The following filters (defined using polar frequency coordinates) are used to construct and collapse the pyramid ([Portilla et al. 2000][2], App. I).  $L,H$ are low and high-pass filters, and $G_k$ ($k\in\{1,\cdots,K\}$) is used to choose the orientation (out of $K$ directions).  
 
 $$
 L(r) = \begin{cases}
@@ -139,15 +139,19 @@ Let the temporal filter $F$ be one of:
 - FIR Window ([`scipy.signal.firwin`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.firwin.html)),
 - Butterworth ([`scipy.signal.butter`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html?highlight=butterworth)).
 
-If the video is sampled at $f_s$, i.e. $f_s$ frames per second, then TODO.
+If the video is sampled at $f_s$, i.e. $f_s$ frames per second, then we can only recover motions that occur at at most $\frac{f_s}2$ by the Nyquist criterion.  Then to instantiate a (FIR window) band-pass filter that keeps signals between frequencies $[f_l,f_h]$ where $f_h\leq \frac{f_s}2$, we can use the following code snippet (width is the length of the filter; longer length results in less artifacts):
 
-Let $I_{1:T}$ be a sequence of complex-valued images, then we compute the result after temporal filtering as follows.
+    F = scipy.fftpack.fft(scipy.fftpack.ifftshift(scipy.signal.firwin(width,[f_l,f_h],fs=f_s,pass_zero=False)))
+
+where since time-domain impulse response of the filter is returned, DFT is taken to get the frequency response.
+
+Let $I_{1:T}$ be a sequence of real-valued images, then temporal filtering is performed as below.
 
 > **Algorithm (Temporal Filtering).**
 >  
 > Inputs:
-> - $I_{1:T}$ a sequence of complex-valued images.
-> - $F$ is the temporal filter (1D) to use.
+> - $I_{1:T}$ a sequence of real-valued images.
+> - $F$ is the frequency response of the temporal filter (1D) to use.
 >  
 > Initialize:
 > - $J_{1:T}$ is the filtered image sequence of the same dimensions as $I_{1:T}$.
@@ -166,8 +170,8 @@ $$
 J = I \circ \exp(i(\alpha-1)\Delta\Phi),
 $$
 
-where $\exp$ is applied entry-wise, and $\alpha$ is the magnification factor: $\alpha=1$ is no modification, $\alpha>1$ is motion magnification, $\alpha<1$ is motion attenuation.
+where $\exp$ is applied entry-wise, and $\alpha$ is the magnification factor: $\alpha>1$ is motion magnification, and $\alpha<1$ is motion attenuation.
 
 [1]: http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf
-[2]: https://www.cns.nyu.edu/pub/eero/portilla03-preprint-corrected.pdf
+[2]: https://www.cns.nyu.edu/pub/eero/portilla99-reprint.pdf
 [3]: https://en.wikipedia.org/wiki/Atan2#Definition_and_computation
