@@ -4,7 +4,7 @@ This is an incomplete summary of ([Wadhwa et al. 2013][1], Sec. 3), with added d
 
 The motivation for phase-based video motion processing comes from the Fourier shift theorem.  Therefore, understanding the motion processing method used in ths paper requires knowledge of Fourier analysis.  
 
-We first represent an image with the Fourier synthesis formula.  Let $f\in\mathbb{R}^{[0,1]}$ denote an 1D image of length $1$, where its values can be interpreted as luminance, then it can be written as a trigonometric polynomial using the definition of Fourier series, i.e.
+We first represent an image with the Fourier synthesis formula.  Let $f\in\mathbb{R}^{[0,1]}$ denote an 1D image of unit length, where its values can be interpreted as luminance, then it can be written as a trigonometric polynomial using the definition of Fourier series, i.e.
 
 $$f(x) = \sum_{k=-\infty}^\infty c_k \exp\left(i2\pi kx\right), $$
 
@@ -26,12 +26,12 @@ $$f'(x+\delta(t)) = \sum_{k=-\infty}^\infty c_k \exp\left(i2\pi k(x+\delta(t))\r
 
 with $\alpha > 1$ resulting in magnification and $\alpha < 1$ in attenuation.  Refer to [`docs/examples.ipynb`](./examples.ipynb) for toy examples of motion modification.
 
-However, most interesting motions are not just translations.  Usually, motions are localized and we have to deal with $\delta(x,t)$.  Also, they would also require multiple frequency bands to represent, meaning that by indexing the motions by $j$, we need to treat the phases over $k\in A_j$ as a whole.  Now the motion is written as
+However, most interesting motions are not just translations.  Usually, motions are localized and we have to deal with $\delta(x,t)$.  Also, they would also require multiple frequency bands to represent, meaning that by indexing the motions by $j$, we need to treat the phases over frequency bands $k\in A_j$ as a whole.  Now the motion is written as
 
-$$f(x+\delta(x,t)) = \sum_{j} \left(\sum_{k\in Aj} c_k \exp\left(i2\pi kx\right) \right) \cdot \exp
-\left(i2\pi \sum_{k\in Aj}\delta_j(x,t,k)\right),$$
+$$f(x+\delta(x,t)) = \sum_{j} \left(\sum_{k\in A_j} c_k \exp\left(i2\pi kx\right) \right) \cdot \exp
+\left(i2\pi \sum_{k\in A_j}\delta_j(x,t,k)\right),$$
 
-where $p_j$ are trigonometric polynomials, and we process each summand instead which spans across different frequency bands.
+and we process each summand as a whose.
 
 ## Complex Steerable Pyramid
 
@@ -39,9 +39,9 @@ Without further assumption, a simple method to partition the 2D frequency spectr
 
 Each partition captures objects of a certain size and orientation, hence motions of a certain scale and direction.  The corners not included in the circle is the high-pass residual, and the center part that the pyramid of finite depth left un-partitioned is the low-pass residual.  
 
-Since for real-valued images, Fourier coefficients are conjugate symmetric, so we only need to keep half of the 2D frequency spectrum to perform processing on.  As a consequence, we do have to throw out the other half, because the sum of each partition and its conjugate reflection gives a real-valued time-domain signal without the zero phase.  This gives the "complex" nature of this pyramid.
+Since for real-valued images, Fourier coefficients are conjugate symmetric, so we only need to keep half of the 2D frequency spectrum to perform processing on.  On the other hand, we have to throw out the other half anyways, because the sum of each partition and its conjugate reflection gives a real-valued time-domain signal without the zero phase.  This gives the "complex" nature of this pyramid.
 
-Finally, note that as analyzed in ([Wadhwa et al. 2013][1], Sec. 3.2), there is a trade-off between the amount of motion magnification that can be achieved, which means using a pyramid with more levels and orientations, and the amount of distortion in the output, which is minimized with less levels and orientations.
+Finally, note that as analyzed in ([Wadhwa et al. 2013][1], Sec. 3.2), there is a trade-off between the amount of motion magnification that can be achieved, which means using a pyramid with more levels and orientations, and the amount of distortion in the output, which is minimized when using a pyramid with fewer levels and orientations.
 
 [1]: http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf
 [2]: https://www.cns.nyu.edu/pub/eero/portilla99-reprint.pdf
