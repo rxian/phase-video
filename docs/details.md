@@ -40,7 +40,7 @@ As pictorially described in ([Wadhwa et al. 2013][1], Fig. 2):
 
 ### Filters 
 
-The result $Y$ of performing filtering $F$ to a DFT image $X$ in the frequency domain is an entry-wise product, $Y = F\circ X$.  If $F$ is defined in terms of polar frequency coordinates (i.e. its Fourier coefficients are a function of $(r,\theta)$) and $X$ is origin-centered with width $2W$ (i.e. DC component is at $(0,0)$), then the result is (cf. [atan2][3] definition)
+The result $Y$ of performing filtering $F$ to a DFT image $X$ in the frequency domain is an entry-wise product, $Y = F\circ X$.  If $F$ is defined in terms of polar frequency coordinates (i.e. its Fourier coefficients are a function of $(r,\theta)$) and $X$ is origin-centered with width $2W$ (i.e. DC component is at $(0,0)$), then the result is (cf. [atan2](https://en.wikipedia.org/wiki/Atan2#Definition_and_computation) definition)
 
 $$ Y_{i,j} = X_{i,j} \cdot F\left(\frac{\sqrt{i^2+j^2}}{W} \pi, \text{atan2}(j,i) \right). $$
 
@@ -177,4 +177,3 @@ where $\exp$ is applied entry-wise, and $\alpha$ is the magnification factor: $\
 
 [1]: http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf
 [2]: https://www.cns.nyu.edu/pub/eero/portilla99-reprint.pdf
-[3]: https://en.wikipedia.org/wiki/Atan2#Definition_and_computation
