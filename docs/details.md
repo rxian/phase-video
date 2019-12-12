@@ -1,10 +1,12 @@
 # Implementation Details
 
-**Algorithm Overview** ([Wadhwa et al. 2013][1], Fig. 2)
+## Algorithm Overview
+
+As pictorially described in ([Wadhwa et al. 2013][1], Fig. 2):
 - Compute the complex steerable pyramid for each frame of the video (processed on $(x,y)$-planes, where the video sequence lies on $(x,y,t)$-hyperplane; now the changes in the phase component over time corresponds to motion).  [[details](#complex-steerable-pyramid)]
 - Perform band-pass temporal filtering on the phase component of each image in the pyramid to isolate motion at specific frequencies (processed on $t$-axis, and now the amplitude of the resulting "image" corresponds to the amount of motion).  [[details](#temporal-filtering)]
-- Smooth the "images" (optional, not described here).
-- Multiply the resulting "images" by $\alpha$, and add it back to the phase component of the respective frames in the pyramid (positive coefficient gives motion amplification, and negative gives attenuation).  [[details](#motion-modification)]
+- Smooth the "images" (omitted).
+- Multiply the resulting "images" by $\alpha$, and add it back to the phase component of the respective frames in the pyramid (positive coefficient gives motion magnification, and negative gives attenuation).  [[details](#motion-modification)]
 - Reconstruct video by collapsing the pyramid.  [[details](#synthesis)]
 
 > **Algorithm (Motion Modification).**
@@ -18,18 +20,19 @@
 >  
 > Initialize:
 > - $P_{1:T}$, ${R_H}_{1:T}$, ${R_L}_{1:T}$ represent the pyramid sequence.
+> - $Q_{1:T}$ represents the pyramid for storing motion magnified frames.
 > - $J_{1:T}$ is the output video sequence.
 > - Filter $F$ with $f_s,f_h,f_l$ as described in [temporal filtering section](#temporal-filtering).
 > ---
-> Obtain the complex steerable pyramid representation of each frame, i.e. $(P_t,{R_H}_t,{R_L}_t) \gets \text{PyramidAnalysis}(I_t,D,K,N,B)$ for all $t=1,\cdots T$, as described in [analysis algorithm](#analysis).
+> For $t=1,\cdots, T$, set $(P_t,{R_H}_t,{R_L}_t) \gets \text{PyramidAnalysis}(I_t,D,K,N,B)$, which is to obtain the complex steerable pyramid representation of each frame, as described in [analysis algorithm](#analysis).
 >  
 > For $d,n,k=1$ to $D,N,K$ respectively:
-> - Set $X_{1:T} := (P_1[d,n,k],P_2[d,n,k],\cdots,P_T[d,n,k])$, the evolution of $I$ in pyramid representation at scale $(D,N)$ and direction $K$.
-> - Set $\Phi_{1:T}$ to be the phase component of $X_{1:T}$ ([`numpy.angle`](https://docs.scipy.org/doc/numpy/reference/generated/numpy.angle.html)).
-> - Set $\Delta\Phi_{1:T} \gets \text{TemporalFiltering}(\Phi_{1:T},F)$, performing temporal filtering on the phase, as described in [temporal filtering algorithm](#temporal-filtering).
-> - For each $t$, perform motion modification as described in [motion modification section](#motion-modification) with $(X_t,\Delta\Phi_t,\alpha)$, and update $X_t$ to be the result.
+> - Collect $X_{1:T} := (P_1[d,n,k],P_2[d,n,k],\cdots,P_T[d,n,k])$, the evolution of $I$ in pyramid representation at scale $(D,N)$ and direction $K$.
+> - Set $\Phi_{1:T}$ to be the phase component of $X_{1:T}$ (e.g. with [`numpy.angle`](https://docs.scipy.org/doc/numpy/reference/generated/numpy.angle.html)).
+> - Set $\Delta\Phi_{1:T} \gets \text{TemporalFiltering}(\Phi_{1:T},F)$, which is to perform temporal filtering on the phase, as described in [temporal filtering algorithm](#temporal-filtering).
+> - For $t=1,\cdots, T$, set $Q_t[d,n,k]\gets P_t[d,n,k] \circ \exp(i(\alpha-1)\Delta\Phi_t)$, which is to modify motion, as described in [motion modification section](#motion-modification).
 >  
-> Obtain the motion magnified video sequence $J_{1:T}$, where $J_t\gets \text{PyramidSynthesis}(P_t,{R_H}_t,{R_L}_t,D,K,N,B)$ for all $t$, as described in [synthesis algorithm](#synthesis).
+> Obtain the motion magnified video sequence $J_{1:T}$, where $J_t\gets \text{PyramidSynthesis}(Q_t,{R_H}_t,{R_L}_t,D,K,N,B)$ for all $t$, as described in [synthesis algorithm](#synthesis).
 >  
 > Return $J_{1:T}$.
 
@@ -150,13 +153,13 @@ Let $I_{1:T}$ be a sequence of real-valued images, then temporal filtering is pe
 > **Algorithm (Temporal Filtering).**
 >  
 > Inputs:
-> - $I_{1:T}$ a sequence of real-valued images.
+> - $I_{1:T}$ a sequence of real-valued images of dimension $H\times W$.
 > - $F$ is the frequency response of the temporal filter (1D) to use.
 >  
 > Initialize:
 > - $J_{1:T}$ is the filtered image sequence of the same dimensions as $I_{1:T}$.
 > ---
-> For all pixel locations $i$:
+> For all pixel locations $i\in\{1,\cdots,H\}\times\{1,\cdots,W\}$:
 > - Set $x:= (I_{1,i},I_{2,i},\cdots,I_{T,i})$, the evolution of the pixel at $i$.
 > - Compute $\tilde x\gets \text{DFT}(x)$.
 > - Compute $\tilde y\gets \tilde x \circ F$.
@@ -164,7 +167,7 @@ Let $I_{1:T}$ be a sequence of real-valued images, then temporal filtering is pe
 
 ## Motion Modification
 
-Given a filtered frame $I$ in the pyramid (obtained with the [analysis algorithm](#analysis)), and an phase image $\Delta\Phi$ representing the motion present in this frame, we magnify the motion in the filtered frame by computing
+Given a filtered frame $I$ in the pyramid (obtained with the [analysis algorithm](#analysis)), and an phase image $\Delta\Phi$ representing the motion present in this frame (i.e. by computing phase difference or with [temporal filtering](#temporal-filtering) on the phase component), we magnify/attenuate the motion in the filtered frame, with output denoted by $J$, via
 
 $$
 J = I \circ \exp(i(\alpha-1)\Delta\Phi),
