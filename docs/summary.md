@@ -2,9 +2,9 @@
 
 This is an incomplete summary of ([Wadhwa et al. 2013][1], Sec. 3), with added details for rationalizing the methodology.
 
-The motivation for phase-based video motion processing comes from the Fourier shift theorem.  Therefore, understanding the motion processing method used in ths paper requires knowledge of Fourier analysis.  
+The motivation for phase-based video motion processing comes from the Fourier shift theorem.  Therefore, understanding the motion processing method used in this paper requires knowledge of Fourier analysis.  
 
-We first represent an image with the Fourier synthesis formula.  Let $f\in\mathbb{R}^{[0,1]}$ denote an 1D image of unit length, where its values can be interpreted as luminance, then it can be written as a trigonometric polynomial using the definition of Fourier series, i.e.
+We first represent an image with the Fourier synthesis formula.  Let $f\in\mathbb{R}^{[0,1]}$ denote a 1D image of unit length, where its values can be interpreted as luminance, then it can be written as a trigonometric polynomial using the definition of Fourier series, i.e.
 
 $$f(x) = \sum_{k=-\infty}^\infty c_k \exp\left(i2\pi kx\right), $$
 
@@ -26,16 +26,17 @@ $$f'(x+\delta(t)) = \sum_{k=-\infty}^\infty c_k \exp\left(i2\pi k(x+\delta(t))\r
 
 with $\alpha > 1$ resulting in magnification and $\alpha < 1$ in attenuation.  Refer to [`docs/examples.ipynb`](./examples.ipynb) for toy examples of motion modification.
 
-However, most interesting motions are not just translations.  Usually, motions are localized and we have to deal with $\delta(x,t)$.  Also, they would also require multiple frequency bands to represent, meaning that by indexing the motions by $j$, we need to treat the phases over frequency bands $k\in A_j$ as a whole.  Now the motion is written as
+However, most interesting motions are not just translations.  Usually, motions are localized and we have to deal with $\delta(x,t)$.  Also, they would also require multiple frequency bands to represent, meaning that by indexing the motions by $j$, we need to treat the phases over frequency bands $k\in A_j$ as a whole.  Now, the motion is written as
 
 $$f(x+\delta(x,t)) = \sum_{j} \left(\sum_{k\in A_j} c_k \exp\left(i2\pi kx\right) \right) \cdot \exp
 \left(i2\pi \sum_{k\in A_j}\delta_j(x,t,k)\right),$$
 
-and we process each summand as a whose.
+and we process each summand as a whose with temporal filters of appropriate pass-bands to isolate the motion of interest.
 
 ## Complex Steerable Pyramid
 
 Without further assumption, a simple method to partition the 2D frequency spectrum for motion extraction is the steerable pyramid.  Ideally, the pyramid divides the 2D frequency domain into concentric rings and sectors of equal angles (cf. [Wadhwa et al. 2013][1], Fig. 4).
+
 
 Each partition captures objects of a certain size and orientation, hence motions of a certain scale and direction.  The corners not included in the circle is the high-pass residual, and the center part that the pyramid of finite depth left un-partitioned is the low-pass residual.  
 
