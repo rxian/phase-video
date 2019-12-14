@@ -1,4 +1,3 @@
-#%%
 import numpy as np
 import scipy.fftpack
 
@@ -80,15 +79,15 @@ def im2pyr(im,D,N,K):
     idft = scipy.fftpack.ifft2
 
     I = dft(im)
-    R_h = idft(apply_filter(I,lambda r, th: highpass_filter(r/2.,th)))
+    Rh = idft(apply_filter(I,lambda r, th: highpass_filter(r/2.,th)))
     P = []
     for d in range(D):
         P.append([ [ idft(apply_filter(I,lambda r, th: pyramid_filter(r,th,n,N,k,K))) for k in range(K) ] for n in range(N) ])
         I = downsample2(apply_filter(I,lowpass_filter))
-    R_l = idft(I)
-    return P, R_h, R_l
+    Rl = idft(I)
+    return P, Rh, Rl
 
-def pyr2im(P,R_h,R_l):
+def pyr2im(P,Rh,Rl):
     dft = scipy.fftpack.fft2
     idft = scipy.fftpack.ifft2
 
@@ -96,7 +95,7 @@ def pyr2im(P,R_h,R_l):
     N = len(P[0])
     K = len(P[0][0])
 
-    I = dft(R_l)
+    I = dft(Rl)
     for d in range(D-1,-1,-1):
         I = apply_filter(upsample2(I,shape=P[d][0][0].shape),lowpass_filter)
         for n in range(N):
@@ -111,44 +110,35 @@ def pyr2im(P,R_h,R_l):
                     J_c[:,0] = 0.
                 J_c = scipy.fftpack.ifftshift(J_c)
                 I += J + J_c
-    I += apply_filter(dft(R_h),lambda r, th: highpass_filter(r/2.,th))
+    I += apply_filter(dft(Rh),lambda r, th: highpass_filter(r/2.,th))
     return idft(I)
 
 
+## Debug code below
+if __name__ == '__main__':
 
+    import matplotlib.pyplot as plt
 
-#%%%%%%%%%%%%%%%%%%
-# DEBUG CODE BELOW
+    disc = np.zeros((100,100),dtype=np.float32)
+    for i in range(disc.shape[0]):
+        for j in range(disc.shape[1]):
+            if np.sqrt((i-disc.shape[0]//2)**2+(j-disc.shape[1]//2)**2) < 25:
+                disc[i,j] = 1
 
-import matplotlib.pyplot as plt
+    im = disc
+    plt.imshow(disc)
 
-#%%
-disc = np.zeros((100,100),dtype=np.float32)
-for i in range(disc.shape[0]):
-    for j in range(disc.shape[1]):
-        if np.sqrt((i-disc.shape[0]//2)**2+(j-disc.shape[1]//2)**2) < 25:
-            disc[i,j] = 1
+    from PIL import Image
+    from requests import get
+    from io import BytesIO
 
-im = disc
-plt.imshow(disc)
+    im = Image.open(BytesIO(get("https://rxian2.web.illinois.edu/cs445/proj1/a_im_in_colored2.jpg").content)).convert('LA')
+    im = np.array(im,dtype=np.float32)[:,:,0]
+    plt.imshow(im);plt.colorbar()
 
-#%%
-from PIL import Image
-from requests import get
-from io import BytesIO
+    P, Rh, Rl = im2pyr(im,2,2,4)
 
-im = Image.open(BytesIO(get("https://rxian2.web.illinois.edu/cs445/proj1/a_im_in_colored2.jpg").content)).convert('LA')
-im = np.array(im,dtype=np.float32)[:,:,0]
-plt.imshow(im);plt.colorbar();
+    re = np.real(pyr2im(P, Rh, Rl))
+    plt.imshow(np.real(re));plt.colorbar()
 
-#%%
-P, R_h, R_l = im2pyr(im,2,2,4)
-
-#%%
-re = np.real(pyr2im(P, R_h, R_l))
-plt.imshow(np.real(re));plt.colorbar();
-
-# %%
-plt.imshow(np.real(re)-im);plt.colorbar();
-
-# %%
+    plt.imshow(np.real(re)-im);plt.colorbar()
