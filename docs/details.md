@@ -1,8 +1,6 @@
 # Implementation Details
 
-## Algorithm Overview
-
-As pictorially described in ([Wadhwa et al. 2013][1], Fig. 2):
+First, an overview is provided.  As pictorially described in ([Wadhwa et al. 2013][1], Fig. 2):
 - Compute the complex steerable pyramid for each frame of the video (processed on $(x,y)$-planes, where the video sequence lies on $(x,y,t)$-hyperplane; now the changes in the phase component over time corresponds to motion).  [[details](#complex-steerable-pyramid)]
 - Perform band-pass temporal filtering on the phase component of each image in the pyramid to isolate motion at specific frequencies (processed on $t$-axis, and now the amplitude of the resulting "image" corresponds to the amount of motion).  [[details](#temporal-filtering)]
 - Smooth the "images" (omitted).
@@ -32,7 +30,7 @@ As pictorially described in ([Wadhwa et al. 2013][1], Fig. 2):
 > - Set $\Delta\Phi_{1:T} \gets \text{TemporalFiltering}(\Phi_{1:T},F)$, which is to perform temporal filtering on the phase, as described in [temporal filtering algorithm](#temporal-filtering).
 > - For $t=1,\cdots, T$, set $Q_t[d,n,k]\gets P_t[d,n,k] \circ \exp(i(\alpha-1)\Delta\Phi_t)$, which is to modify motion, as described in [motion modification section](#motion-modification).
 >  
-> Obtain the motion magnified video sequence $J_{1:T}$, where $J_t\gets \text{PyramidSynthesis}(Q_t,{R_H}_t,{R_L}_t,D,K,N,B)$ for all $t$, as described in [synthesis algorithm](#synthesis).
+> For $t=1,\cdots, T$, set $J_t\gets \text{PyramidSynthesis}(Q_t,{R_H}_t,{R_L}_t,D,K,N,B)$, which is to obtain the motion magnified video sequence, as described in [synthesis algorithm](#synthesis).
 >  
 > Return $J_{1:T}$.
 
@@ -40,9 +38,9 @@ As pictorially described in ([Wadhwa et al. 2013][1], Fig. 2):
 
 ### Filters 
 
-The result $Y$ of performing filtering $F$ to a DFT image $X$ in the frequency domain is an entry-wise product, $Y = F\circ X$.  If $F$ is defined in terms of polar frequency coordinates (i.e. its Fourier coefficients are a function of $(r,\theta)$) and $X$ is origin-centered with width $2W$ (i.e. DC component is at $(0,0)$), then the result is (cf. [atan2](https://en.wikipedia.org/wiki/Atan2#Definition_and_computation) definition)
+The result $Y$ of performing filtering $F$ to a DFT image $X$ in the frequency domain is an entry-wise product, $Y = F\circ X$.  If $F$ is defined in terms of polar frequency coordinates (i.e. its Fourier coefficients are a function of $(r,\theta)$) and $X$ is origin-centered with width $2W$ (i.e. DC component is at $(0,0)$), then the result is (cf. [`numpy.arctan2`](https://docs.scipy.org/doc/numpy/reference/generated/numpy.arctan2.html))
 
-$$ Y_{i,j} = X_{i,j} \cdot F\left(\frac{\sqrt{i^2+j^2}}{W} \pi, \text{atan2}(j,i) \right). $$
+$$ Y_{i,j} = X_{i,j} \cdot F\left(\frac{\sqrt{i^2+j^2}}{W} \pi, \text{arctan2}(j,i) \right). $$
 
 The following filters (defined using polar frequency coordinates) are used to construct and collapse the pyramid ([Portilla et al. 2000][2], App. I).  $L,H$ are low and high-pass filters, and $G_k$ ($k\in\{1,\cdots,K\}$) is used to choose the orientation (out of $K$ directions).  
 
@@ -74,7 +72,7 @@ $$W_n(r) = H(r/2^{(N-n)/N})\cdot L(r/2^{(N-n+1)/N}),$$
 
 and the second is
 
-$$W_n(r) = TODO.$$
+$$W_n(r) = \text{Omitted}.$$
 
 Finally, $B_{n,k}(r,\theta) = W_n(r)G_k(\theta)$ defines the filters used in the pyramid.
 
@@ -102,8 +100,8 @@ Given an image $I$, obtain the complex steerable pyramid as follows.
 > 
 > For $d=1,\cdots,D$:
 > - For $n=1,\cdots,N$ and $k=1,\cdots,K$, store $P[d,n,k] \gets \text{IDFT}(\tilde J_{d-1} \circ B_{n,k}$).
-> - Set $J_d \gets \text{IDFT}(\tilde J_{d-1} \circ L)$, and downsample by 2.
-> - Set $\tilde J_d \gets J_{d}$.
+> - Set $J_d \gets \text{IDFT}(\tilde J_{d-1} \circ L)$, and downsample by 2 (via keeping every other pixel).
+> - Set $\tilde J_d \gets \text{DFT}(J_{d})$.
 > 
 > Set $R_L:= \text{IDFT}(\tilde J_D)$, which is the low-pass residual.
 > 
@@ -122,17 +120,23 @@ Given the complex steerabl pyramid representation $P$ of an image, reconstruct t
 > - $K$ is the number of filter orientations.
 > - $N$ is the number of filters per octave.
 > - $B$ is the filter to use.
+>
+> Initialize:
+> - $\tilde I$ is a complex-valued image.
 > ---
-> Let $\tilde I := \text{DFT}(R_H) \circ \bar H(\bullet/2)$.
 > 
-> For $d,n,k=1$ to $D,N,K$ respectively:
-> - Upsample $P[d,n,k]$ by 2 for $d-1$ times, and set $\tilde J\gets \text{DFT}(P[d,n,k])$.
-> - $\tilde J \gets \tilde J \circ \bar B_{n,k}$.
-> - $\tilde I\gets \tilde I + \tilde J$.
-> - Set $\tilde J$ to its complex conjugate, and reflect it about the $x$- and $y$-axis.
-> - $\tilde I\gets \tilde I + \tilde J$.
+> Let $\tilde I \gets \text{DFT}(R_L)$.
 > 
-> Upsample $R_L$ by 2 for $d$ times, and set $\tilde I\gets \tilde I + \text{DFT}(R_L)$.
+> For $d=D,D-1,\cdots,1$:
+> - Let $I\gets \text{IDFT}(\tilde I)$, and upsample it by 2 (via duplicating pixels).
+> - Set $\tilde I\gets \text{DFT}(I)\circ \bar L$. 
+> - For $n,k=1$ to $N,K$ respectively:
+>   - Let $\tilde J \gets \text{DFT}(P[d,n,k]) \circ \bar B_{n,k}$
+>   - Set $\tilde I\gets \tilde I + \tilde J$.
+>   - Set $\tilde J$ to its complex conjugate, and perform frequency domain reversal (reflect horizontally and vertically).
+>   - Set $\tilde I\gets \tilde I + \tilde J$.
+> 
+> Set $\tilde I \gets \tilde I + \text{DFT}(R_H) \circ \bar H(\bullet/2)$.
 > 
 > Return $\text{IDFT}(\tilde I)$.
 
