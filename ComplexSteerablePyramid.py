@@ -119,26 +119,25 @@ if __name__ == '__main__':
 
     import matplotlib.pyplot as plt
 
-    disc = np.zeros((100,100),dtype=np.float32)
-    for i in range(disc.shape[0]):
-        for j in range(disc.shape[1]):
-            if np.sqrt((i-disc.shape[0]//2)**2+(j-disc.shape[1]//2)**2) < 25:
-                disc[i,j] = 1
+    # disc = np.zeros((100,100),dtype=np.float32)
+    # for i in range(disc.shape[0]):
+    #     for j in range(disc.shape[1]):
+    #         if np.sqrt((i-disc.shape[0]//2)**2+(j-disc.shape[1]//2)**2) < 25:
+    #             disc[i,j] = 1
 
-    im = disc
-    plt.imshow(disc)
+    # im = disc
+    # plt.figure();plt.imshow(disc)
 
     from PIL import Image
     from requests import get
     from io import BytesIO
-
     im = Image.open(BytesIO(get("https://rxian2.web.illinois.edu/cs445/proj1/a_im_in_colored2.jpg").content)).convert('LA')
     im = np.array(im,dtype=np.float32)[:,:,0]
-    plt.imshow(im);plt.colorbar()
+    plt.figure();plt.imshow(im);plt.colorbar()
+
 
     P, Rh, Rl = im2pyr(im,2,2,4)
-
     re = np.real(pyr2im(P, Rh, Rl))
-    plt.imshow(np.real(re));plt.colorbar()
 
-    plt.imshow(np.real(re)-im);plt.colorbar()
+    plt.figure();plt.imshow(np.real(re));plt.colorbar()
+    plt.figure();plt.imshow(np.real(re)-im);plt.colorbar()
