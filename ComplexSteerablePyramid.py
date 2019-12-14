@@ -134,11 +134,10 @@ plt.imshow(disc)
 
 #%%
 from PIL import Image
-import requests
+from requests import get
 from io import BytesIO
 
-# io.BytesIO(urllib.urlopen("https://rxian2.web.illinois.edu/cs445/proj1/a_im_in_colored2.jpg").read())
-im = Image.open(BytesIO(requests.get("https://rxian2.web.illinois.edu/cs445/proj1/a_im_in_colored2.jpg").content)).convert('LA')
+im = Image.open(BytesIO(get("https://rxian2.web.illinois.edu/cs445/proj1/a_im_in_colored2.jpg").content)).convert('LA')
 im = np.array(im,dtype=np.float32)[:,:,0]
 plt.imshow(im);plt.colorbar();
 
