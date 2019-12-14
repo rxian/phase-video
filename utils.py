@@ -1,5 +1,5 @@
 import cv2
-import os 
+import os
 
 #TODO: CITATION NEEDED
 def video2imageFolder(input_file, output_path):
@@ -20,7 +20,7 @@ def video2imageFolder(input_file, output_path):
         print("Failed to open input video")
 
     frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-    frame_rate = cap.get(cv2.CAP_PROP_FPS)
+    frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
 
     frame_idx = 0
 
