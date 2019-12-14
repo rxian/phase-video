@@ -123,9 +123,16 @@ from io import BytesIO
 # io.BytesIO(urllib.urlopen("https://rxian2.web.illinois.edu/cs445/proj1/a_im_in_colored2.jpg").read())
 im = Image.open(BytesIO(requests.get("https://rxian2.web.illinois.edu/cs445/proj1/a_im_in_colored2.jpg").content)).convert('LA')
 im = np.array(im,dtype=np.float32)[:,:,0]
+plt.imshow(im);plt.colorbar();
 
 #%%
-P, R_h, R_l = im2pyr(im,2,1,4)
+P, R_h, R_l = im2pyr(im,2,2,4)
 
 #%%
 re = np.real(pyr2im(P, R_h, R_l))
+plt.imshow(np.real(re));plt.colorbar();
+
+# %%
+plt.imshow(np.real(re)-im);plt.colorbar();
+
+# %%
