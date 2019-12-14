@@ -101,7 +101,7 @@ Given an image $I$, obtain the complex steerable pyramid as follows.
 > For $d=1,\cdots,D$:
 > - For $n=1,\cdots,N$ and $k=1,\cdots,K$, store $P[d,n,k] \gets \text{IDFT}(\tilde J_{d-1} \circ B_{n,k}$).
 > - Set $J_d \gets \text{IDFT}(\tilde J_{d-1} \circ L)$, and downsample by 2 (via keeping every other pixel).
-> - Set $\tilde J_d \gets J_{d}$.
+> - Set $\tilde J_d \gets \text{DFT}(J_{d})$.
 > 
 > Set $R_L:= \text{IDFT}(\tilde J_D)$, which is the low-pass residual.
 > 
