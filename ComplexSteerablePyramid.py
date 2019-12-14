@@ -11,7 +11,6 @@ def lowpass_filter(r,th):
         return 0.
 
 def highpass_filter(r,th):
-    # print(r,th)
     if np.pi/4. < r < np.pi/2.:
         return np.cos(np.pi/2.*np.log2(2.*r/np.pi))
     elif r <= np.pi/4.:
@@ -33,30 +32,48 @@ def bandpass_filter(r,th,n,N):
 def pyramid_filter(r,th,n,N,k,K):
     return bandpass_filter(r,th,n,N) * angular_filter(r,th,k,K)
 
-def apply_filter(I,F):
+def apply_filter(I,F,stretch=False):
     width = np.max(I.shape)
-
-    w_y = scipy.fftpack.fftfreq(I.shape[0],d=1/(2.*np.pi*I.shape[0]/width))
-    w_x = scipy.fftpack.fftfreq(I.shape[1],d=1/(2.*np.pi*I.shape[1]/width))
+    d_y = 1/(2.*np.pi) if stretch else 1/(2.*np.pi*I.shape[0]/width)
+    d_x = 1/(2.*np.pi) if stretch else 1/(2.*np.pi*I.shape[1]/width)
+    w_y = scipy.fftpack.fftfreq(I.shape[0],d=d_y)
+    w_x = scipy.fftpack.fftfreq(I.shape[1],d=d_x)
     W = np.stack((np.repeat(w_y.reshape(-1,1), I.shape[1], axis=1),np.repeat(w_x.reshape(1,-1), I.shape[0], axis=0)))
-    
     R = np.linalg.norm(W,axis=0) 
     Th = np.arctan2(W[0],W[1])
 
     return I * np.vectorize(F)(R,Th)
 
-def downsample2(im):
-    return np.array(im[::2,::2],copy=True)
+def downsample2(I,method='crop'):
+    if method == 'crop':
+        window_left = lambda width_big, width_small: np.where(scipy.fftpack.fftshift(scipy.fftpack.fftfreq(width_big)) == 0)[0].flatten()[0] - np.where(scipy.fftpack.fftshift(scipy.fftpack.fftfreq(width_small)) == 0)[0].flatten()[0]
+        new_h = int(np.ceil(I.shape[0]/2.))
+        new_w = int(np.ceil(I.shape[1]/2.))
+        offset_y = window_left(I.shape[0],new_h)
+        offset_x = window_left(I.shape[1],new_w)
+        return scipy.fftpack.ifftshift(scipy.fftpack.fftshift(I)[offset_y:offset_y+new_h,offset_x:offset_x+new_w])
+    elif method == 'skip':
+        return scipy.fftpack.fft2(scipy.fftpack.ifft2(I)[::2,::2])
 
-def upsample2(im,shape=None):
-    ret = np.array(im,copy=True)
-    ret = np.insert(ret,range(1,im.shape[0]),(ret[:-1]+ret[1:])/2.,axis=0)
-    ret = np.insert(ret,range(1,im.shape[1]),(ret[:,:-1]+ret[:,1:])/2.,axis=1)
-    ret = np.pad(ret,((0,1),(0,1)), mode='edge')
-    if shape is not None:
-        return ret[:shape[0],:shape[1]]
-    else:
-        return ret
+def upsample2(I,shape=None,method='crop'):
+    if method == 'crop':
+        window_left = lambda width_big, width_small: np.where(scipy.fftpack.fftshift(scipy.fftpack.fftfreq(width_big)) == 0)[0].flatten()[0] - np.where(scipy.fftpack.fftshift(scipy.fftpack.fftfreq(width_small)) == 0)[0].flatten()[0]
+        new_h = I.shape[0] * 2 if shape is None else shape[0]
+        new_w = I.shape[1] * 2 if shape is None else shape[1]
+        offset_y = window_left(new_h,I.shape[0])
+        offset_x = window_left(new_w,I.shape[1])
+        ret = np.zeros((new_h,new_w),dtype=np.complex)
+        ret[offset_y:offset_y+I.shape[0],offset_x:offset_x+I.shape[1]] = scipy.fftpack.fftshift(I)
+        return scipy.fftpack.ifftshift(ret)
+    elif method == 'bilinear':
+        ret = scipy.fftpack.ifft2(I)
+        ret = np.insert(ret,range(1,I.shape[0]),(ret[:-1]+ret[1:])/2.,axis=0)
+        ret = np.insert(ret,range(1,I.shape[1]),(ret[:,:-1]+ret[:,1:])/2.,axis=1)
+        ret = np.pad(ret,((0,1),(0,1)), mode='edge')
+        if shape is not None:
+            return scipy.fftpack.fft2(ret[:shape[0],:shape[1]])
+        else:
+            return scipy.fftpack.fft2(ret)
 
 def im2pyr(im,D,N,K):
     dft = scipy.fftpack.fft2
@@ -67,7 +84,7 @@ def im2pyr(im,D,N,K):
     P = []
     for d in range(D):
         P.append([ [ idft(apply_filter(I,lambda r, th: pyramid_filter(r,th,n,N,k,K))) for k in range(K) ] for n in range(N) ])
-        I = dft(downsample2(idft(apply_filter(I,lowpass_filter))))
+        I = downsample2(apply_filter(I,lowpass_filter))
     R_l = idft(I)
     return P, R_h, R_l
 
@@ -81,7 +98,7 @@ def pyr2im(P,R_h,R_l):
 
     I = dft(R_l)
     for d in range(D-1,-1,-1):
-        I = apply_filter(dft(upsample2(idft(I)),shape=P[d][0][0].shape),lowpass_filter)
+        I = apply_filter(upsample2(I,shape=P[d][0][0].shape),lowpass_filter)
         for n in range(N):
             for k in range(K):
                 J = apply_filter(dft(P[d][n][k]),lambda r, th: pyramid_filter(r,th,n,N,k,K))
