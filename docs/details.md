@@ -100,7 +100,7 @@ Given an image $I$, obtain the complex steerable pyramid as follows.
 > 
 > For $d=1,\cdots,D$:
 > - For $n=1,\cdots,N$ and $k=1,\cdots,K$, store $P[d,n,k] \gets \text{IDFT}(\tilde J \circ B_{n,k}$).
-> - Set $J \gets \text{IDFT}(\tilde J \circ L(\bullet/2))$, and downsample by 2 (by keeping every other pixel).
+> - Set $J \gets \text{IDFT}(\tilde J \circ L)$, and downsample by 2 (by keeping every other pixel).
 > - Set $\tilde J \gets \text{DFT}(J)$.
 > 
 > Set $R_L:= \text{IDFT}(\tilde J)$, which is the low-pass residual.
@@ -129,7 +129,7 @@ Given the complex steerabl pyramid representation $P$ of an image, reconstruct t
 > 
 > For $d=D,D-1,\cdots,1$:
 > - Let $I\gets \text{IDFT}(\tilde I)$, and upsample it by 2 (via bilinear interpolation).
-> - Set $\tilde I\gets \text{DFT}(I)\circ \bar L(\bullet/2)$. 
+> - Set $\tilde I\gets \text{DFT}(I)\circ \bar L$. 
 > - For $n,k=1$ to $N,K$ respectively:
 >   - Let $\tilde J \gets \text{DFT}(P[d,n,k]) \circ \bar B_{n,k}$
 >   - Set $\tilde J_c$ to the complex conjugate of $\tilde J$, and perform frequency domain reversal (flip horizontally and vertically).
