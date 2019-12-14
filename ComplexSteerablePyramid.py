@@ -21,11 +21,11 @@ def highpass_filter(r,th):
 
 def angular_filter(r,th,k,K):
     c = np.math.factorial(K-1)/np.sqrt(K*np.math.factorial(2.*(K-1)))
-    angle = np.min((np.abs(th-np.pi*k/K),2*np.pi-np.abs(th-np.pi*k/K)))
-    if angle < np.pi/2:
+    angle = np.min((np.abs(th-np.pi*k/K),2.*np.pi-np.abs(th-np.pi*k/K)))
+    if angle < np.pi/2.:
         return c*np.power(2*np.cos(angle),K-1)
     else:
-        return 0
+        return 0.
 
 def bandpass_filter(r,th,n,N):
     return highpass_filter(r/np.power(2.,(N-n-1)/N),th) * lowpass_filter(r/np.power(2.,(N-n)/N),th)
@@ -36,8 +36,8 @@ def pyramid_filter(r,th,n,N,k,K):
 def apply_filter(I,F):
     width = np.max(I.shape)
 
-    w_y = scipy.fftpack.fftfreq(I.shape[0],d=1/(2*np.pi*I.shape[0]/width))
-    w_x = scipy.fftpack.fftfreq(I.shape[1],d=1/(2*np.pi*I.shape[1]/width))
+    w_y = scipy.fftpack.fftfreq(I.shape[0],d=1/(2.*np.pi*I.shape[0]/width))
+    w_x = scipy.fftpack.fftfreq(I.shape[1],d=1/(2.*np.pi*I.shape[1]/width))
     W = np.stack((np.repeat(w_y.reshape(-1,1), I.shape[1], axis=1),np.repeat(w_x.reshape(1,-1), I.shape[0], axis=0)))
     
     R = np.linalg.norm(W,axis=0) 
@@ -63,7 +63,7 @@ def im2pyr(im,D,N,K):
     idft = scipy.fftpack.ifft2
 
     I = dft(im)
-    R_h = idft(apply_filter(I,lambda r, th: highpass_filter(r/2,th)))
+    R_h = idft(apply_filter(I,lambda r, th: highpass_filter(r/2.,th)))
     P = []
     for d in range(D):
         P.append([ [ idft(apply_filter(I,lambda r, th: pyramid_filter(r,th,n,N,k,K))) for k in range(K) ] for n in range(N) ])
@@ -88,13 +88,13 @@ def pyr2im(P,R_h,R_l):
                 J_c = np.flip(scipy.fftpack.fftshift(np.array(np.conjugate(J),copy=True)),axis=(0,1))
                 if J_c.shape[0] % 2 == 0:
                     J_c = np.roll(J_c,1,axis=0)
-                    J_c[0,:] = 0
+                    J_c[0,:] = 0.
                 if J_c.shape[1] % 2 == 0:
                     J_c = np.roll(J_c,1,axis=1)
-                    J_c[:,0] = 0
+                    J_c[:,0] = 0.
                 J_c = scipy.fftpack.ifftshift(J_c)
                 I += J + J_c
-    I += apply_filter(dft(R_h),lambda r, th: highpass_filter(r/2,th))
+    I += apply_filter(dft(R_h),lambda r, th: highpass_filter(r/2.,th))
     return idft(I)
 
 
