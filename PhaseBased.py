@@ -42,6 +42,7 @@ def modify_motion(frames,alpha,D,N,K,fs,fl,fh):
     return np.array(ret)
 
 
+## Debug code below
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
