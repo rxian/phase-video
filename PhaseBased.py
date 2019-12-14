@@ -24,7 +24,7 @@ def modify_motion(frames,alpha,D,N,K,fs,fl,fh):
             for k in range(K):
 
                 # P_frames will have shape (H, W, T+pad), as opposed to (T+pad, H, W)
-                P_frames = np.pad(np.array([x[d][n][k] for x in Ps],dtype=np.complex),((0,pad),(0,0),(0,0)))
+                P_frames = np.pad(np.array([x[d][n][k] for x in Ps],dtype=np.complex),((0,pad),(0,0),(0,0)),mode='edge')
                 P_frames = np.moveaxis(P_frames,0,-1)
 
                 delta_phi_dft = scipy.fftpack.fft(np.angle(P_frames),axis=-1) * np.broadcast_to(temporal_filter,P_frames.shape)
