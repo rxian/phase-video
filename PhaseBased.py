@@ -5,7 +5,7 @@ from ComplexSteerablePyramid import pyr2im, im2pyr
 def modify_motion(frames,alpha,D,N,K,fs,fl,fh):
     T = len(frames)
 
-    pad = int(np.ceil(np.max((T,100./(fh-fl))) - T))
+    pad = int(np.ceil(np.max((T,400./(fh-fl))) - T))
     if pad%2 == 0: pad += 1
 
     print(pad, (fh-fl) , 5./(fh-fl), T*5./(fh-fl))
