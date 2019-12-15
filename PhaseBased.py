@@ -4,7 +4,12 @@ from ComplexSteerablePyramid import pyr2im, im2pyr
 
 def modify_motion(frames,alpha,D,N,K,fs,fl,fh):
     T = len(frames)
-    pad = 0 if T%2 == 1 else 1
+
+    pad = int(np.ceil(np.max((T,100./(fh-fl))) - T))
+    if pad%2 == 0: pad += 1
+
+    print(pad, (fh-fl) , 5./(fh-fl), T*5./(fh-fl))
+
     Ps = []
     Rhs, Rls = [], []
 
@@ -14,6 +19,7 @@ def modify_motion(frames,alpha,D,N,K,fs,fl,fh):
         temporal_filter = scipy.fftpack.fft(scipy.fftpack.ifftshift(scipy.signal.firwin(T+pad,[fl,fh],fs=fs,pass_zero=False)))
 
     for t in range(T):
+        print('im2pyr', t)
         P, Rh, Rl = im2pyr(frames[t],D,N,K)
         Ps.append(P)
         Rhs.append(Rh)
@@ -22,7 +28,7 @@ def modify_motion(frames,alpha,D,N,K,fs,fl,fh):
     for d in range(D):
         for n in range(N):
             for k in range(K):
-
+                print('editing',d,n,k)
                 # P_frames will have shape (H, W, T+pad), as opposed to (T+pad, H, W)
                 P_frames = np.pad(np.array([x[d][n][k] for x in Ps],dtype=np.complex),((0,pad),(0,0),(0,0)),mode='edge')
                 P_frames = np.moveaxis(P_frames,0,-1)
@@ -37,6 +43,7 @@ def modify_motion(frames,alpha,D,N,K,fs,fl,fh):
 
     ret = []
     for t in range(T):
+        print('pyr2im', t)
         ret.append(np.real( pyr2im(Ps[t],Rhs[t],Rls[t]) ))
     
     return np.array(ret)
