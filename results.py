@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--input_file', '-i', default='crane_crop.mp4',help='input video')
     args = parser.parse_args()
 
-    '''
+
     frame_path = "frames"
     try:
         os.mkdir(frame_path)
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         print ("Successfully created the directory %s " % frame_path)
     #video to frames
     utils.video2imageFolder(args.input_file, "frames")
-    '''
+
     dir_frames = 'frames'
     filenames = []
     filesinfo = os.scandir(dir_frames)
@@ -69,6 +69,6 @@ if __name__ == '__main__':
     #save magnified frames
     for i in range(ret.shape[0]):
         im_out = ret[i,:,:,:].astype(np.uint8)
-        cv2.imwrite('m_frames/b{:04d}.jpg'.format(i), cv2.cvtColor(im_out, cv2.COLOR_LAB2RGB))
+        cv2.imwrite('m_frames/b{:04d}.jpg'.format(i), cv2.cvtColor(im_out, cv2.COLOR_LAB2BGR))
     #convert frames to video
     utils.imageFolder2mpeg("m_frames", fps=30.0)
