@@ -1,18 +1,14 @@
 # Phase-Based Video Motion Processing
 
-This is an incomplete Python re-implementation of the 2013 SIGGRAPH [paper][1] by Wadhwa, Rubinstein, Durand, and Freeman.  Code provided by original authors can be found [here](http://people.csail.mit.edu/nwadhwa/phase-video/).
+This is an (so far) incomplete (and un-optimized) Python re-implementation of the 2013 SIGGRAPH [paper][1] by Wadhwa, Rubinstein, Durand, and Freeman.  Code provided by original authors can be found [here](http://people.csail.mit.edu/nwadhwa/phase-video/).
 
-A summary of the paper and details of implementation can be found under [`docs`](./docs).
+A summary of the paper and details of implementation can be found under [`docs`](./docs), and results are posted [here](https://rxian2.web.illinois.edu/cs445/project/).
 
-## Results
-
-Todo.
-
-## Omitted Implementations
+## Omitted Features
 - Radial filter for quarter-octave pyramid.
 - Smoothing of the temporally filtered phases.
 - Attenuating motion in temporal stop-band.
-- Handling videos with significant motion.
+- Handling videos with large motion.
 
 ## References 
 

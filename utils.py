@@ -1,80 +1,56 @@
+'''
+Utility I/O functions.  Based on UIUC CS445 course material.
+'''
+
+import numpy as np
 import cv2
 import os
 
-#TODO: CITATION NEEDED
-def video2imageFolder(input_file, output_path):
+def video2numpy(path):
     '''
-    Extracts the frames from an input video file
-    and saves them as separate frames in an output directory.
-    Input:
-        input_file: Input video file.
-        output_path: Output directorys.
-    Output:
-        None
+    Read a video and store its frames in an uint8 numpy.ndarray
+    with shape (length, height, width, BGR-channels).
     '''
-
     cap = cv2.VideoCapture()
-    cap.open(input_file)
+    cap.open(path)
 
-    if not cap.isOpened():
-        print("Failed to open input video")
+    T = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fs = float(cap.get(cv2.CAP_PROP_FPS))
 
-    frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-    frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
-
-    frame_idx = 0
-
-    while frame_idx < frame_count:
+    frames = []
+    for i in range(T):
         ret, frame = cap.read()
-
-        if not ret:
-            print ("Failed to get the frame {}".format(frameId))
+        if ret == 0:
+            print("Failed to get frame %d" %(i))
             continue
+        frames.append(frame)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, i+1)
 
-        out_name = os.path.join(output_path, 'f{:04d}-fr{:03d}.jpg'.format(frame_idx+1, frame_rate))
-        ret = cv2.imwrite(out_name, frame)
-        if not ret:
-            print ("Failed to write the frame {}".format(frame_idx))
-            continue
+    cap.release()
 
-        frame_idx += 1
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+    return np.array(frames), fs
 
-
-def imageFolder2mpeg(input_path, output_path='./output_video.mpeg', fps=30.0):
+def numpy2video(path, frames, fs=30.0):
     '''
-    Extracts the frames from an input video file
-    and saves them as separate frames in an output directory.
-    Input:
-        input_path: Input video file.
-        output_path: Output directorys.
-        fps: frames per second (default: 30).
-    Output:
-        None
+    Inverse operation of video2numpy.
     '''
+    codec = cv2.VideoWriter_fourcc(*'MPG1')
+    writer = cv2.VideoWriter(path, codec, fs, frames.shape[1:3])
 
-    dir_frames = input_path
-    files_info = os.scandir(dir_frames)
+    T = len(frames)
+    for t in range(T):
+        writer.write(frames[t])
 
-    file_names = [f.path for f in files_info if f.name.endswith(".jpg")]
-    file_names.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+    writer.release()
 
-    frame_Height, frame_Width = cv2.imread(file_names[0]).shape[:2]
-    resolution = (frame_Width, frame_Height)
+def numpy2folder(frames,path):
+    '''
+    TODO: save frames as images to a folder
+    '''
+    pass
 
-    # Define the codec and create VideoWriter object
-    fourcc = cv2.VideoWriter_fourcc(*'MPG1')
-    video_writer = cv2.VideoWriter(output_path, fourcc, fps, resolution)
-
-    frame_count = len(file_names)
-
-    frame_idx = 0
-
-    while frame_idx < frame_count:
-
-
-        frame_i = cv2.imread(file_names[frame_idx])
-        video_writer.write(frame_i)
-        frame_idx += 1
-
-    video_writer.release()
+def folder2numpy(path):
+    '''
+    TODO: load frames from sorted images in a folder.
+    '''
+    pass
