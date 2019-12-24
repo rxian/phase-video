@@ -2,7 +2,7 @@
 
 This is an (so far) incomplete (and un-optimized) Python re-implementation of the 2013 SIGGRAPH [paper][1] by Wadhwa, Rubinstein, Durand, and Freeman.  Code provided by original authors can be found [here](http://people.csail.mit.edu/nwadhwa/phase-video/).
 
-A summary of the paper and details of implementation can be found under [`docs`](./docs), and results are posted [here](https://rxian2.web.illinois.edu/cs445/project/).
+Results are posted [here](https://rxian2.web.illinois.edu/cs445/project/), and a summary of the paper and details of implementation can be found under [`docs`](./docs) folder.
 
 ## Omitted Features
 - Radial filter for quarter-octave pyramid.
