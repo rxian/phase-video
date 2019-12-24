@@ -9,8 +9,7 @@ if __name__ ==  '__main__':
     for download at:
     http://people.csail.mit.edu/nwadhwa/phase-video/
 
-    TODO: Optimize im2pyr and pyr2im; otherwise it takes 2+ hours to 
-          run the following code on an average computer.
+    It takes around 10 minutes to complete on an average computer.
     '''
     input_path = 'crane_crop.mp4'
     output_path = 'crane_crop_magnified.mpeg'
@@ -31,7 +30,7 @@ if __name__ ==  '__main__':
     F = PhaseBased.get_temporal_filter(fs,fh,fl,F_length)
     for c in range(frames.shape[3]):
         print('Processing channel %d' %(c))
-        frames[:,:,:,c] = PhaseBased.modify_motion_multiprocs(frames[:,:,:,c],alpha,D,N,K,F,num_workers=32)
+        frames[:,:,:,c] = PhaseBased.modify_motion(frames[:,:,:,c],alpha,D,N,K,F)
     frames = frames.clip(0,255).astype(np.uint8)
 
     for i, frame in enumerate(frames):
