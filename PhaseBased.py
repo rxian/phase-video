@@ -46,34 +46,6 @@ def modify_motion(frames,alpha,D,N,K,fs,fl,fh):
     
     return np.array(ret)
 
-
-## Debug code below
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-
-    frame1 = np.zeros((50,50),dtype=np.float32)
-    frame1[25:28,25:28] = 255
-
-    frames = np.empty((30,50,50))
-    for i in range(len(frames)):
-        if i % 2:
-            frames[i] = frame1
-        else:
-            frames[i] = np.roll(frame1,1,axis=0)
-
-    plt.figure(); plt.imshow(frames[0])
-    plt.figure(); plt.imshow(frames[1]-frames[0])
-
-    mframes = modify_motion(frames, 2, 2, 1, 4, 1, 0.2, 0.5)
-
-    plt.figure(); plt.imshow(mframes[0].clip(0,255));plt.colorbar()
-    plt.figure(); plt.imshow(mframes[1].clip(0,255))
-    # plt.figure(); plt.imshow(frames[1]-frames[0])
-    plt.figure(); plt.imshow(mframes[1]-frames[0]);plt.colorbar()
-
-
-
-
 def im2pyr_wrapper(im,t,D,N,K,q):
     q.put((t,im2pyr(im,D,N,K)))
 

@@ -101,7 +101,8 @@ def pyr2im(P,Rh,Rl):
         for n in range(N):
             for k in range(K):
                 J = apply_filter(dft(P[d][n][k]),lambda r, th: pyramid_filter(r,th,n,N,k,K))
-                J_c = np.flip(scipy.fftpack.fftshift(np.array(np.conjugate(J),copy=True)),axis=(0,1))
+                I += J
+                J_c = np.flip(scipy.fftpack.fftshift(np.conjugate(J)),axis=(0,1))
                 if J_c.shape[0] % 2 == 0:
                     J_c = np.roll(J_c,1,axis=0)
                     J_c[0,:] = 0.
@@ -109,7 +110,7 @@ def pyr2im(P,Rh,Rl):
                     J_c = np.roll(J_c,1,axis=1)
                     J_c[:,0] = 0.
                 J_c = scipy.fftpack.ifftshift(J_c)
-                I += J + J_c
+                I += J_c
     I += apply_filter(dft(Rh),lambda r, th: highpass_filter(r/2.,th))
     return idft(I)
 
