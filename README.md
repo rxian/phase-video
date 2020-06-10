@@ -1,8 +1,6 @@
 # Phase-Based Video Motion Processing
 
-This is an incomplete Python re-implementation of the 2013 SIGGRAPH [paper][1] by Wadhwa, Rubinstein, Durand, and Freeman.  Code provided by original authors can be found [here](http://people.csail.mit.edu/nwadhwa/phase-video/).
-
-Results are posted [here](https://rxian2.web.illinois.edu/cs445/project/), the code is under the [`source`](./source) folder, and a summary of the paper and details of implementation can be found under the [`docs`](./docs) folder.
+This is an incomplete Python re-implementation of the 2013 SIGGRAPH [paper][1] by Wadhwa, Rubinstein, Durand, and Freeman.  Code provided by original authors can be found [here](http://people.csail.mit.edu/nwadhwa/phase-video/). See results, descriptions and implementation details [here](https://rxian.github.io/phase-video/).
 
 ## Omitted Features
 

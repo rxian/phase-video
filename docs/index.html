@@ -1,0 +1,332 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+        <title>Phase-Based Video Motion Processing</title>
+        <link href="https://fonts.googleapis.com/css?family=Inconsolata:700&amp;amp;display=swap" rel="stylesheet">
+        <style type="text/css">
+            body { font-family: 'Helvetica', 'Arial', sans-serif; }
+            code { font-family: 'Inconsolata', monospace; }
+            body { 
+                margin: 0px; 
+                padding: 0px; 
+                font-size: 96%; 
+            }
+            p { margin-top: 0px; }
+            img { max-width: 100%; }
+
+            a { 
+                color: inherit;
+                text-decoration: none;
+            }
+            #content a { color: #688BA8; }
+            a:hover { color: #A8C5DB !important; }
+            #content { 
+                margin: 20px; 
+                overflow: hidden; 
+            }
+            @media ( min-width: 500px ) {
+                #container {
+                    max-width: 600px;
+                    vertical-align: middle;
+                    margin: auto;
+                }
+            }
+            @media ( max-width: 499px ) {
+                #content { margin: 10px; }
+                #container { min-width: 200px; }
+            }
+            h1 { 
+                font-weight: bold; 
+                font-size: 1.3em; 
+                letter-spacing: 0.08em; 
+                text-transform: uppercase;
+                margin-top: 1.5em;
+                margin-bottom: 0.6em;
+            }
+            h2 { 
+                font-weight: bold; 
+                font-size: 1.2em; 
+                letter-spacing: 0.08em; 
+                text-transform: uppercase;
+                margin-top: 1.5em;
+                margin-bottom: 0.6em;
+            }
+            h3 { 
+                font-weight: bold; 
+                font-size: 1.2em; 
+                margin-top: 1.2em;
+                margin-bottom: 0.6em;
+            }
+            figure {
+                display: inline-block;
+                margin: 10px;
+                text-align: center;
+            }
+            figure img {
+                vertical-align: top;
+                margin: auto;
+            }
+            figcaption {
+                color: #A8A8A8;
+                font-size: 0.85em;
+            }
+            figure figcaption { margin-top: 0.5em; }
+            @media ( min-width: 500px ) {
+                #container { max-width: 850px !important; }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="content">
+                <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+                <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+                <h1>Phase-Based Video Motion Processing</h1>
+                <figcaption> 
+                    <p>Fork me on <a href="https://github.com/rxian/phase-video">GitHub</a>.</p>
+                </figcaption>
+                <p>Many phenomena in real-life occurs at minuscule scales that are not perceptible with bare eyes, for instance, the swinging of skyscrapers due to winds, the pulsing change in skin color due to blood flow, or the wiggling of another person's eyes.  The goal of video motion processing is to magnify such barely noticeable motions that are present in recorded videos.  In this project, we reproduced the phased-based video motion processing algorithm proposed in the SIGGRAPH 2013 "Phase based video motion processing" paper (<a href="http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf">Wadhwa et al. 2013</a>).</p>
+                <h2>Results</h2>
+                <p>The following are two results produced with our implementation (not all functionalities introduced in <a href="http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf">Wadhwa et al. 2013</a> are implemented).</p>
+                <figure style="display: block; margin-left: auto; margin-right: auto;">
+                    <iframe width="640" height="360" src="https://www.youtube.com/embed/A9G_SUowGL4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <figcaption>Swinging Crane (<a href="http://people.csail.mit.edu/nwadhwa/phase-video/">source</a>)<br>75x (correction) magnification of motions at 0.2&ndash;0.25Hz using a half-octave pyramid with 3 levels and 8 orientations.</figcaption>
+                </figure>
+                <figure style="display: block; margin-left: auto; margin-right: auto;">
+                    <img src="https://raw.githubusercontent.com/rxian/phase-video/master/docs/img/result_crane.jpg" width="400">
+                    <figcaption>Slice of the video sequence (left: location of the slice, center: original video, right: motion magnified).</figcaption>
+                </figure>
+                <p><br></p>
+                <figure style="display: block; margin-left: auto; margin-right: auto;">
+                    <iframe width="640" height="360" src="https://www.youtube.com/embed/YsLTermzO2g" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <figcaption>Vibrating Guitar Strings (<a href="http://people.csail.mit.edu/nwadhwa/phase-video/">source</a>)<br>25x magnification of motions at 72&ndash;92Hz using a half-octave pyramid with 3 levels and 8 orientations.</figcaption>
+                </figure>
+                <figure style="display: block; margin-left: auto; margin-right: auto;">
+                    <img src="https://raw.githubusercontent.com/rxian/phase-video/master/docs/img/result_guitar.jpg" width="500">
+                    <figcaption>Slice of the video sequence (left: location of the slice, top: original video, bottom: motion magnified).</figcaption>
+                </figure>
+                <p>The processing was done in CIELAB color space on each channel separately.  Each frame of the input video was decomposed into a complex steerable half-octave pyramid with 3 levels and 8 orientations.  Motions at a specific frequency range are isolated with a band-pass FIR window temporal filter.  It took approximately 10 minutes to generate each video using an Intel i9-9900K with 32GB memory.</p>
+                <h3>Complex Steerable Pyramid</h3>
+                <p>The following is a sample result of complex pyramid decomposition from our implementation.</p>
+                <figure style="display: block; margin-left: auto; margin-right: auto;">
+                    <figure style="margin-left: 10px; margin-right: 10px;">
+                        <img src="https://raw.githubusercontent.com/rxian/phase-video/master/docs/img/pyr_orig.jpg" width="114">
+                        <figcaption>Original Photo: Chow Chow</figcaption>
+                    </figure>
+                    <figure style="margin-left: 10px; margin-right: 10px;">
+                        <img src="https://raw.githubusercontent.com/rxian/phase-video/master/docs/img/pyr_rh.jpg" width="114">
+                        <img src="https://raw.githubusercontent.com/rxian/phase-video/master/docs/img/pyr_rl.jpg" width="28.5">
+                        <figcaption>High and Low-Pass Residuals (Real-Valued)</figcaption>
+                    </figure>
+                    <br>
+                    <figure>
+                        <img src="https://raw.githubusercontent.com/rxian/phase-video/master/docs/img/pyr_abs.jpg" width="500">
+                        <figcaption>Magnitude</figcaption>
+                    </figure>
+                    <br>
+                    <figure>
+                        <img src="https://raw.githubusercontent.com/rxian/phase-video/master/docs/img/pyr_imag.jpg" width="500">
+                        <figcaption>Imaginary Part</figcaption>
+                    </figure>
+                    <figcaption>Complex steerable pyramid decomposition example with 3 levels and 4 orientations.</figcaption>
+                </figure>
+                <h2>Summary</h2>
+                <p>The motivation for phase-based video motion processing comes from the Fourier shift theorem.  Therefore, understanding the motion processing method used in this paper requires knowledge of Fourier analysis (cf. <a href="http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf">Wadhwa et al. 2013</a>, Sec. 3).</p>
+                <p>We first represent an image with the Fourier synthesis formula.  Let \(f\in\mathbb{R}^{[0,1]}\) denote a 1D image of unit length, where its values can be interpreted as luminance, then it can be written as a trigonometric polynomial using the definition of Fourier series, i.e.</p>
+                <p>\[f(x) = \sum_{k=-\infty}^\infty c_k \exp\left(i2\pi kx\right), \]</p>
+                <p>where \(c_k\) is some complex number.  </p>
+                <h3>Motion and Phase</h3>
+                <p>The Fourier shift theorem states that </p>
+                <p>\[f(x+\delta(t)) = \sum_{k=-\infty}^\infty c_k \exp\left(i2\pi k(x+\delta(t))\right),\]</p>
+                <p>meaning that if the image is translated by \(\delta(t)\) over time, then it will appear as a phase shift on the trigonometric polynomial.  If we take the phase component of \(f(x+\delta(t))\), and use a temporal filter with zero DC response to filter out the changing phase that corresponds to the translation, i.e. to extract</p>
+                <p>\[\Delta\phi(t)=2\pi k \delta(t),\]</p>
+                <p>then we can directly magnify or attenuate this translation by increasing or decreasing the change in phase via multiplication, i.e.</p>
+                <p>\[f'(x+\delta(t)) = \sum_{k=-\infty}^\infty c_k \exp\left(i2\pi k(x+\delta(t))\right)\cdot \exp\left(i\alpha\Delta\phi(t)\right),\]</p>
+                <p>with \(\alpha &gt; 1\) resulting in magnification and \(\alpha &lt; 1\) in attenuation.  Refer to <a href="https://github.com/rxian/phase-video/blob/master/docs/examples.ipynb"><code>docs/examples.ipynb</code></a> for toy examples of motion modification.</p>
+                <p>However, most interesting motions are not just translations.  Usually, motions are localized and we have to deal with \(\delta(x,t)\).  Also, they would also require multiple frequency bands to represent, meaning that by indexing the motions by \(j\), we need to treat the phases over frequency bands \(k\in A_j\) as a whole.  Now the motion is written as</p>
+                <p>\[f(x+\delta(x,t)) = \sum_j \left(\sum_{k\in A_j} c_k \exp\left(i2\pi kx\right) \right)\cdot \exp
+                \left(i2\pi \sum_{k\in A_j} \delta_j(x,t,k)\right) ,\]</p>
+                <p>and we process each summand as a whose with temporal filters of appropriate pass-bands to isolate the motion of interest.</p>
+                <figure style="display: block; margin-left: auto; margin-right: auto; max-width: 500px;">
+                    <img src="https://raw.githubusercontent.com/rxian/phase-video/master/docs/img/result_boxes.jpg" width="400">
+                    <figcaption style="text-align: left;">Toy example. In frame 2, the two boxes moved away from each other relative to frame 1. The green curve is the result of motion magnification by 2 using difference of phase and a pyramid with 3 levels.</figcaption>
+                </figure>
+                <h3>Complex Steerable Pyramid</h3>
+                <p>Without further assumption, a simple method to partition the 2D frequency spectrum for motion extraction is the steerable pyramid.  Ideally, the pyramid divides the 2D frequency domain into concentric rings and sectors of equal angles (cf. <a href="http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf">Wadhwa et al. 2013</a>, Fig. 4).</p>
+                <figure style="display: block; margin-left: auto; margin-right: auto; max-width: 500px;">
+                    <img src="https://raw.githubusercontent.com/rxian/phase-video/master/docs/img/pyr_response.jpg" width="300">
+                    <figcaption style="text-align: left;">Ideal frequency response of the filters in a complex steerable pyramid of 3 levels and 4 orientations, meaning each of the 12 filters is an indicator function on a white partition. The right figure has suboctave bands (half-octave pyramid).<br>
+                    The corners comprise the high-pass residual, and the center part is the low-pass residual. The black conjugate symmetric portion is discarded.</figcaption>
+                </figure>
+                <p>Each partition captures objects of a certain size and orientation, hence motions of a certain scale and direction.  The corners not included in the circle is the high-pass residual, and the center part that the pyramid of finite depth left un-partitioned is the low-pass residual.  </p>
+                <p>Since for real-valued images, Fourier coefficients are conjugate symmetric, so we only need to keep half of the 2D frequency spectrum to perform processing on.  On the other hand, we have to throw out the other half anyways, because the sum of each partition and its conjugate reflection gives a real-valued time-domain signal without the zero phase.  This gives the "complex" nature of this pyramid.</p>
+                <p>Finally, note that as analyzed in (<a href="http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf">Wadhwa et al. 2013</a>, Sec. 3.2), there is a trade-off between the amount of motion magnification that can be achieved, which means using a pyramid with more levels and orientations, and the amount of distortion in the output, which is minimized when using a pyramid with fewer levels and orientations.</p>
+                <h2>Implementation Details</h2>
+                <p>First, an overview is provided.  As pictorially described in (<a href="http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf">Wadhwa et al. 2013</a>, Fig. 2):</p>
+                <ul>
+                    <li>Compute the complex steerable pyramid for each frame of the video (processed on \((x,y)\)-planes, where the video sequence lies on \((x,y,t)\)-hyperplane; now the changes in the phase component over time corresponds to motion).  [<a href="#complex-steerable-pyramid">details</a>]</li>
+                    <li>Perform band-pass temporal filtering on the phase component of each image in the pyramid to isolate motion at specific frequencies (processed on \(t\)-axis, and now the amplitude of the resulting "image" corresponds to the amount of motion).  [<a href="#temporal-filtering">details</a>]</li>
+                    <li>Smooth the "images" (omitted).</li>
+                    <li>Multiply the resulting "images" by \(\alpha\), and add it back to the phase component of the respective frames in the pyramid (positive coefficient gives motion magnification, and negative gives attenuation).  [<a href="#motion-modification">details</a>]</li>
+                    <li>Reconstruct video by collapsing the pyramid.  [<a href="#synthesis">details</a>]</li>
+                </ul>
+                <div style="border:1px solid black; max-width: 650px; padding: 10px; margin-left: auto; margin-right: auto;">
+                    <p><strong>Algorithm (Motion Modification).</strong></p>
+                    <p>Input:</p>
+                    <ul>
+                        <li>\(I_{1:T}\) is a real-valued video sequence.</li>
+                        <li>\(D,K,N\) represents the depth, number of orientations and number of filters per octave to be used to construct the complex steerable pyramid.</li>
+                        <li>\(f_s\) represents the sampling rate of the video sequence, and \(f_l,f_h\) represents the frequency range of the motion to be modified.</li>
+                        <li>\(\alpha\) is the magnification factor.</li>
+                        <li>\(B,F\) represent the types of filters to be used to construct the pyramid and for temporal filtering, respectively.</li>
+                    </ul>
+                    <p>Initialize:</p>
+                    <ul>
+                        <li>\(P_{1:T}\), \({R_H}_{1:T}\), \({R_L}_{1:T}\) represent the pyramid sequence.</li>
+                        <li>\(Q_{1:T}\) represents the pyramid for storing motion magnified frames.</li>
+                        <li>\(J_{1:T}\) is the output video sequence.</li>
+                        <li>Filter \(F\) with \(f_s,f_h,f_l\) as described in <a href="#temporal-filtering">temporal filtering section</a>.</li>
+                    </ul>
+                    <hr>
+                    <p>For \(t=1,\cdots, T\), set \((P_t,{R_H}_t,{R_L}_t) \gets \text{PyramidAnalysis}(I_t,D,K,N,B)\), which is to obtain the complex steerable pyramid representation of each frame, as described in <a href="#analysis">analysis algorithm</a>.</p>
+                    <p>For \(d,n,k=1\) to \(D,N,K\) respectively:</p>
+                    <ul>
+                        <li>Collect \(X_{1:T} := (P_1[d,n,k],P_2[d,n,k],\cdots,P_T[d,n,k])\), the evolution of \(I\) in pyramid representation at scale \((D,N)\) and direction \(K\).</li>
+                        <li>Set \(\Phi_{1:T}\) to be the phase component of \(X_{1:T}\) (e.g. with <a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.angle.html"><code>numpy.angle</code></a>).</li>
+                        <li>Set \(\Delta\Phi_{1:T} \gets \text{TemporalFiltering}(\Phi_{1:T},F)\), which is to perform temporal filtering on the phase, as described in <a href="#temporal-filtering">temporal filtering algorithm</a>.</li>
+                        <li>For \(t=1,\cdots, T\), set \(Q_t[d,n,k]\gets P_t[d,n,k] \circ \exp(i(\alpha-1)\Delta\Phi_t)\), which is to modify motion, as described in <a href="#motion-modification">motion modification section</a>.</li>
+                    </ul>
+                    <p>For \(t=1,\cdots, T\), set \(J_t\gets \text{PyramidSynthesis}(Q_t,{R_H}_t,{R_L}_t,D,K,N,B)\), which is to obtain the motion magnified video sequence, as described in <a href="#synthesis">synthesis algorithm</a>.</p>
+                    <p>Return \(J_{1:T}\).</p>
+                </div>
+                <p><a name="complex-steerable-pyramid"></a></p>
+                <h3>Complex Steerable Pyramid</h3>
+                <h4>Filters</h4>
+                <p>The result \(Y\) of performing filtering \(F\) to a DFT image \(X\) in the frequency domain is an entry-wise product, \(Y = F\circ X\).  If \(F\) is defined in terms of polar frequency coordinates (i.e. its Fourier coefficients are a function of \((r,\theta)\)) and \(X\) is origin-centered with width \(2W\) (i.e. DC component is at \((0,0)\)), (cf. <a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.arctan2.html"><code>numpy.arctan2</code></a>)</p>
+                <p>\[ Y_{i,j} = X_{i,j} \cdot F\left(\frac{\sqrt{i^2+j^2}}{W} \pi, \text{arctan2}(j,i) \right). \]</p>
+                <p>The following filters (defined using polar frequency coordinates) are used to construct and collapse the pyramid (<a href="https://www.cns.nyu.edu/pub/eero/portilla99-reprint.pdf">Portilla et al. 2000</a>, App. I).  \(L,H\) are low and high-pass filters, and \(G_k\) (\(k\in\{1,\cdots,K\}\)) is used to choose the orientation (out of \(K\) directions).  </p>
+                <p>\[ L(r) = \begin{cases}
+                    \cos\left(\frac\pi2\log_2\frac{4r}{\pi}\right) &amp; \text{if}\ \frac\pi4 &lt; r &lt;\frac\pi2 \\
+                    1 &amp; \text{if}\ r\leq\frac\pi4\\
+                    0 &amp; \text{if}\ r\geq\frac\pi2,
+                \end{cases} \]</p>
+                <p>\[ H(r) = \begin{cases}
+                    \cos\left(\frac\pi2\log_2\frac{2r}{\pi}\right) &amp; \text{if}\ \frac\pi4 &lt; r &lt; \frac\pi2 \\
+                    0 &amp; \text{if}\ r\leq\frac\pi4\\
+                    1 &amp; \text{if}\ r\geq\frac\pi2,
+                \end{cases} \]</p>
+                <p>\[ G_k(\theta) = \begin{cases} \frac{(K-1)!}{\sqrt{K(2(K-1))!}}\left(2\cos\left(\theta-\frac{\pi k}K\right)\right)^{K-1} &amp;  \text{if } \left|\theta-\frac{\pi k}K\right| &lt; \frac\pi2\\
+                    0 &amp; \text{else.}
+                \end{cases} \]</p>
+                <p>We derive from above the following windowing function (or filter).  For \(n \in \{1,\cdots,N\}\),</p>
+                <p>\[W_n(r) = H(r/2^{(N-n)/N})\cdot L(r/2^{(N-n+1)/N}).\]</p>
+                <p>Finally, \(B_{n,k}(r,\theta) = W_n(r)G_k(\theta)\) defines the filters used in the pyramid.</p>
+                <p><a name="analysis"></a></p>
+                <h4>Analysis</h4>
+                <p>Given an image \(I\), obtain the complex steerable pyramid as follows.</p>
+                <div style="border:1px solid black; max-width: 650px; padding: 10px; margin-left: auto; margin-right: auto;">
+                    <p><strong>Algorithm (Pyramid Analysis).</strong></p>
+                    <p>Input:</p>
+                    <ul>
+                        <li>\(I\) is a real-valued square image of width \(\ell\) centered at the origin.</li>
+                        <li>\(D\) is the depth of the pyramid.</li>
+                        <li>\(K\) is the number of filter orientations.</li>
+                        <li>\(N\) is the number of filters per octave.</li>
+                        <li>\(B\) is the filter to use.</li>
+                    </ul>
+                    <p>Initialize:</p>
+                    <ul>
+                        <li>\(P\) is a \(D\times N\times K\) list representing the pyramid.</li>
+                    </ul>
+                    <hr>
+                    <p>Compute \(\tilde I \gets \text{DFT}(I)\).</p>
+                    <p>Compute \(R_H \gets \text{IDFT}(\tilde I\circ H(\bullet/2))\), which is the high-pass residual.</p>
+                    <p>Let \(\tilde J := \tilde I\).</p>
+                    <p>For \(d=1,\cdots,D\):</p>
+                    <ul>
+                        <li>For \(n=1,\cdots,N\) and \(k=1,\cdots,K\), store \(P[d,n,k] \gets \text{IDFT}(\tilde J \circ B_{n,k}\)).</li>
+                        <li>Set \(J \gets \text{IDFT}(\tilde J \circ L)\), and downsample by 2 (by keeping every other pixel).</li>
+                        <li>Set \(\tilde J \gets \text{DFT}(J)\).</li>
+                    </ul>
+                    <p>Set \(R_L:= \text{IDFT}(\tilde J)\), which is the low-pass residual.</p>
+                    <p>Return \(P, R_H, R_L\).</p>
+                </div>
+                <p><a name="synthesis"></a></p>
+                <h4>Synthesis</h4>
+                <p>Given the complex steerabl pyramid representation \(P\) of an image, reconstruct the original image \(I\) as follows.  Note that by definition of the filters we use, their complex conjugates are identity, i.e. \(\bar B_{n,k}=B_{n,k}\), \(\bar H = H\), and \(\bar L = L\).</p>
+                <div style="border:1px solid black; max-width: 650px; padding: 10px; margin-left: auto; margin-right: auto;">
+                    <p><strong>Algorithm (Pyramid Synthesis).</strong></p>
+                    <p>Inputs:</p>
+                    <ul>
+                        <li>\(P\) is a \(D\times N\times K\) list representing the pyramid.</li>
+                        <li>\(R_H\), \(R_L\) are the high and low-pass residuals.</li>
+                        <li>\(D\) is the depth of the pyramid.</li>
+                        <li>\(K\) is the number of filter orientations.</li>
+                        <li>\(N\) is the number of filters per octave.</li>
+                        <li>\(B\) is the filter to use.</li>
+                    </ul>
+                    <p>Initialize:</p>
+                    <ul>
+                        <li>\(\tilde I\) is a complex-valued image.</li>
+                    </ul>
+                    <hr>
+                    <p>Let \(\tilde I \gets \text{DFT}(R_L)\).</p>
+                    <p>For \(d=D,D-1,\cdots,1\):</p>
+                    <ul>
+                        <li>Let \(I\gets \text{IDFT}(\tilde I)\), and upsample it by 2 (via bilinear interpolation).</li>
+                        <li>Set \(\tilde I\gets \text{DFT}(I)\circ \bar L\). </li>
+                        <li>For \(n,k=1\) to \(N,K\) respectively:
+                            <ul>
+                                <li>Let \(\tilde J \gets \text{DFT}(P[d,n,k]) \circ \bar B_{n,k}\)</li>
+                                <li>Set \(\tilde J_c\) to the complex conjugate of \(\tilde J\), and perform frequency domain reversal (flip horizontally and vertically).</li>
+                                <li>Set \(\tilde I\gets \tilde I + \tilde J+ \tilde J_c\).</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>Set \(\tilde I \gets \tilde I + \text{DFT}(R_H) \circ \bar H(\bullet/2)\).</p>
+                    <p>Return \(\text{IDFT}(\tilde I)\).</p>
+                </div>
+                <p><a name="temporal-filtering"></a></p>
+                <h3>Temporal Filtering</h3>
+                <p>Let the temporal filter \(F\) be one of:</p>
+                <ul>
+                    <li>FIR Window (<a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.firwin.html"><code>scipy.signal.firwin</code></a>),</li>
+                    <li>Butterworth (<a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html?highlight=butterworth"><code>scipy.signal.butter</code></a>).</li>
+                </ul>
+                <p>Let \(I_{1:T}\) be a sequence of real-valued images (video), and if it is sampled at \(f_s\), i.e. \(f_s\) frames per second, then we can only recover motions that occur at at most \(\frac{f_s}2\) by the Nyquist criterion.  Temporal filtering is performed as below.</p>
+                <div style="border:1px solid black; max-width: 650px; padding: 10px; margin-left: auto; margin-right: auto;">
+                    <p><strong>Algorithm (Temporal Filtering).</strong></p>
+                    <p>Inputs:</p>
+                    <ul>
+                        <li>\(I_{1:T}\) a sequence of real-valued images of dimension \(H\times W\).</li>
+                        <li>\(F\) is the frequency response of the temporal filter (1D) to use.</li>
+                    </ul>
+                    <p>Initialize:</p>
+                    <ul>
+                        <li>\(J_{1:T}\) is the filtered image sequence of the same dimensions as \(I_{1:T}\).</li>
+                    </ul>
+                    <hr>
+                    <p>For all pixel locations \(i\in\{1,\cdots,H\}\times\{1,\cdots,W\}\):</p>
+                    <ul>
+                        <li>Set \(x:= (I_{1,i},I_{2,i},\cdots,I_{T,i})\), the evolution of the pixel at \(i\).</li>
+                        <li>Compute \(\tilde x\gets \text{DFT}(x)\).</li>
+                        <li>Compute \(\tilde y\gets \tilde x \circ F\).</li>
+                        <li>Set \(J_{1:T,i} = \text{IDFT}(\tilde y)\).</li>
+                    </ul>
+                </div>
+                <p><a name="motion-modification"></a></p>
+                <h3>Motion Modification</h3>
+                <p>Given a filtered frame \(I\) in the pyramid (obtained with the <a href="#analysis">analysis algorithm</a>), and an phase image \(\Delta\Phi\) representing the motion present in this frame (i.e. by computing phase difference or with <a href="#temporal-filtering">temporal filtering</a> on the phase component), we magnify/attenuate the motion in the filtered frame, with output denoted by \(J\), via</p>
+                <p>\[J = I \circ \exp(i(\alpha-1)\Delta\Phi),\]</p>
+                <p>where \(\exp\) is applied entry-wise, and \(\alpha\) is the magnification factor: \(\alpha&gt;1\) is motion magnification, and \(\alpha&lt;1\) is motion attenuation.</p>
+                <h2>References</h2>
+                <p>Wadhwa, Neal, Michael Rubinstein, Fr&eacute;do Durand, and William T. Freeman. "<a href="http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf">Phase-based video motion processing.</a>" <em>ACM Transactions on Graphics (TOG)</em> 32, no. 4 (2013): 80.
+                Harvard </p>
+                <p>Portilla, Javier, and Eero P. Simoncelli. "<a href="https://www.cns.nyu.edu/pub/eero/portilla99-reprint.pdf">A parametric texture model based on joint statistics of complex wavelet coefficients.</a>" <em>International journal of computer vision</em> 40, no. 1 (2000): 49-70.</p>
+            </div>
+        </div>
+    </body>
+</html>
