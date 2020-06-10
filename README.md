@@ -2,8 +2,7 @@
 
 This is an incomplete Python re-implementation of the 2013 SIGGRAPH [paper][1] by Wadhwa, Rubinstein, Durand, and Freeman.  Code provided by original authors can be found [here](http://people.csail.mit.edu/nwadhwa/phase-video/). See results, descriptions and implementation details [here](https://rxian.github.io/phase-video/).
 
-## Omitted Features
-
+**Omitted features:**
 - Radial filter for quarter-octave pyramid.
 - Smoothing of the temporally filtered phases.
 - Attenuating motion in temporal stop-band.
