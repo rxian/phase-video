@@ -8,10 +8,9 @@ Omitted features: (1) radial filter for quarter-octave pyramid, (2) smoothing of
 
 ## References 
 
-Wadhwa, Neal, Michael Rubinstein, Frédo Durand, and William T. Freeman. "[Phase-based video motion processing.][1]" _ACM Transactions on Graphics (TOG)_ 32, no. 4 (2013): 80.
-Harvard	
+Neal Wadhwa, Michael Rubinstein, Frédo Durand, and William T. Freeman. "[Phase-based video motion processing][1]. _ACM Transactions on Graphics_, 2013.
 
-Portilla, Javier, and Eero P. Simoncelli. "[A parametric texture model based on joint statistics of complex wavelet coefficients.][2]" _International journal of computer vision_ 40, no. 1 (2000): 49-70.
+Javier Portilla, and Eero P. Simoncelli. [A parametric texture model based on joint statistics of complex wavelet coefficients][2]. _International Journal of Computer Vision_, 2000.
 
 [1]: http://people.csail.mit.edu/nwadhwa/phase-video/phase-video.pdf
 [2]: https://www.cns.nyu.edu/pub/eero/portilla99-reprint.pdf
