@@ -112,7 +112,7 @@ def angular_filter(r,th,k,K):
     '''
     Returns the Fourier coefficient of an angular filter.
     '''
-    c = np.math.factorial(K-1)/np.sqrt(K*np.math.factorial(2.*(K-1)))
+    c = np.math.factorial(K-1)/np.sqrt(K*np.math.factorial(2*(K-1)))
     angle = np.min((np.abs(th-np.pi*k/K),2.*np.pi-np.abs(th-np.pi*k/K)))
     if angle < np.pi/2.:
         return c*np.power(2*np.cos(angle),K-1)
